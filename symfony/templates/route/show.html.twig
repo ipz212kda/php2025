@@ -1,0 +1,34 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Route{% endblock %}
+
+{% block body %}
+    <h1>Route</h1>
+
+    <table class="table">
+        <tbody>
+            <tr>
+                <th>Id</th>
+                <td>{{ route.id }}</td>
+            </tr>
+            <tr>
+                <th>Start_location</th>
+                <td>{{ route.startLocation }}</td>
+            </tr>
+            <tr>
+                <th>End_location</th>
+                <td>{{ route.endLocation }}</td>
+            </tr>
+            <tr>
+                <th>Distance_km</th>
+                <td>{{ route.distanceKm }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_route_index') }}">back to list</a>
+
+    <a href="{{ path('app_route_edit', {'id': route.id}) }}">edit</a>
+
+    {{ include('route/_delete_form.html.twig') }}
+{% endblock %}

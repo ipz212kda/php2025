@@ -1,0 +1,11 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}New RideOrder{% endblock %}
+
+{% block body %}
+    <h1>Create new RideOrder</h1>
+
+    {{ include('ride_order/_form.html.twig') }}
+
+    <a href="{{ path('app_ride_order_index') }}">back to list</a>
+{% endblock %}
