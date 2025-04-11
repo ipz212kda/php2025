@@ -5,10 +5,39 @@
 {% block body %}
     <h1>Payment index</h1>
 
-    <table class="table">
+    <form method="get">
+    <div>
+        <label>Номер замовлення</label>
+        <input type="text" name="ride_order_id" value="{{ app.request.get('ride_order_id') }}">
+    </div>
+    <div>
+        <label>Сума</label>
+        <input type="text" name="amount" value="{{ app.request.get('amount') }}">
+    </div>
+    <div>
+        <label>Метод оплати</label>
+        <input type="text" name="payment_method" value="{{ app.request.get('payment_method') }}">
+    </div>
+    <div>
+        <label>Час оплати</label>
+        <input type="text" name="paid_at" value="{{ app.request.get('paid_at') }}">
+    </div>
+    <div>
+        <label>На сторінці:</label>
+        <select name="itemsPerPage">
+            {% for option in [5, 10, 20, 50] %}
+                <option value="{{ option }}" {% if itemsPerPage == option %}selected{% endif %}>{{ option }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <button type="submit">Застосувати фільтри</button>
+    </form>
+
+    <table border="1" cellspacing="0" cellpadding="5">
         <thead>
             <tr>
                 <th>Id</th>
+                <th>Order №</th>
                 <th>Amount</th>
                 <th>Payment_method</th>
                 <th>Paid_at</th>
@@ -19,6 +48,7 @@
         {% for payment in payments %}
             <tr>
                 <td>{{ payment.id }}</td>
+                <td>{{ payment.rideOrder.id }}</td>
                 <td>{{ payment.amount }}</td>
                 <td>{{ payment.paymentMethod }}</td>
                 <td>{{ payment.paidAt ? payment.paidAt|date('Y-m-d H:i:s') : '' }}</td>
@@ -36,4 +66,22 @@
     </table>
 
     <a href="{{ path('app_payment_new') }}">Create new</a>
+
+    <div class="pagination">
+    {% if currentPage > 1 %}
+        <a href="?page={{ currentPage - 1 }}">«</a>
+    {% endif %}
+
+    {% for page in 1..totalPages %}
+        {% if page == currentPage %}
+            <span class="current">{{ page }}</span>
+        {% else %}
+            <a href="?page={{ page }}">{{ page }}</a>
+        {% endif %}
+    {% endfor %}
+
+    {% if currentPage < totalPages %}
+        <a href="?page={{ currentPage + 1 }}">»</a>
+    {% endif %}
+</div>
 {% endblock %}

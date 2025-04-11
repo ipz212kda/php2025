@@ -4,8 +4,32 @@
 
 {% block body %}
     <h1>Route index</h1>
+    
+    <form method="get">
+    <div>
+        <label>Стартова локація:</label>
+        <input type="text" name="start_location" value="{{ app.request.get('start_location') }}">
+    </div>
+    <div>
+        <label>Кінцева локація:</label>
+        <input type="text" name="end_location" value="{{ app.request.get('end_location') }}">
+    </div>
+    <div>
+        <label>Дистанція (км):</label>
+        <input type="text" name="distance_km" value="{{ app.request.get('distance_km') }}">
+    </div>
+    <div>
+        <label>На сторінці:</label>
+        <select name="itemsPerPage">
+            {% for option in [5, 10, 20, 50] %}
+                <option value="{{ option }}" {% if itemsPerPage == option %}selected{% endif %}>{{ option }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <button type="submit">Застосувати фільтри</button>
+    </form>
 
-    <table class="table">
+    <table border="1" cellspacing="0" cellpadding="5">
         <thead>
             <tr>
                 <th>Id</th>
@@ -36,4 +60,22 @@
     </table>
 
     <a href="{{ path('app_route_new') }}">Create new</a>
+
+    <div class="pagination">
+    {% if currentPage > 1 %}
+        <a href="?page={{ currentPage - 1 }}&itemsPerPage={{ itemsPerPage }}{% if app.request.query.get('start') %}&start={{ app.request.query.get('start') }}{% endif %}{% if app.request.query.get('end') %}&end={{ app.request.query.get('end') }}{% endif %}{% if app.request.query.get('distance') %}&distance={{ app.request.query.get('distance') }}{% endif %}">« Попередня</a>
+    {% endif %}
+
+    {% for page in 1..totalPages %}
+        {% if page == currentPage %}
+            <span class="current">{{ page }}</span>
+        {% else %}
+            <a href="?page={{ page }}&itemsPerPage={{ itemsPerPage }}{% if app.request.query.get('start') %}&start={{ app.request.query.get('start') }}{% endif %}{% if app.request.query.get('end') %}&end={{ app.request.query.get('end') }}{% endif %}{% if app.request.query.get('distance') %}&distance={{ app.request.query.get('distance') }}{% endif %}">{{ page }}</a>
+        {% endif %}
+    {% endfor %}
+
+    {% if currentPage < totalPages %}
+        <a href="?page={{ currentPage + 1 }}&itemsPerPage={{ itemsPerPage }}{% if app.request.query.get('start') %}&start={{ app.request.query.get('start') }}{% endif %}{% if app.request.query.get('end') %}&end={{ app.request.query.get('end') }}{% endif %}{% if app.request.query.get('distance') %}&distance={{ app.request.query.get('distance') }}{% endif %}">Наступна »</a>
+    {% endif %}
+</div>
 {% endblock %}

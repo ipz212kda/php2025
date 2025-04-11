@@ -5,33 +5,91 @@
 {% block body %}
     <h1>RideOrder index</h1>
 
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Id</th>
-                <th>Status</th>
-                <th>Created_at</th>
-                <th>actions</th>
-            </tr>
-        </thead>
-        <tbody>
-        {% for ride_order in ride_orders %}
-            <tr>
-                <td>{{ ride_order.id }}</td>
-                <td>{{ ride_order.status }}</td>
-                <td>{{ ride_order.createdAt ? ride_order.createdAt|date('Y-m-d H:i:s') : '' }}</td>
-                <td>
-                    <a href="{{ path('app_ride_order_show', {'id': ride_order.id}) }}">show</a>
-                    <a href="{{ path('app_ride_order_edit', {'id': ride_order.id}) }}">edit</a>
-                </td>
-            </tr>
-        {% else %}
-            <tr>
-                <td colspan="4">no records found</td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
+    <form method="get">
+    <div>
+        <label>Client ID</label>
+        <input type="text" name="client_id" value="{{ app.request.get('client_id') }}">
+    </div>
+    <div>
+        <label>Driver ID</label>
+        <input type="text" name="driver_id" value="{{ app.request.get('driver_id') }}">
+    </div>
+    <div>
+        <label>Route ID</label>
+        <input type="text" name="route_id" value="{{ app.request.get('route_id') }}">
+    </div>
+    <div>
+        <label>Status</label>
+        <input type="text" name="status" value="{{ app.request.get('status') }}">
+    </div>
+    <div>
+        <label>Created At</label>
+        <input type="date" name="created_at" value="{{ app.request.get('created_at') }}">
+    </div>
+    <div>
+        <label>На сторінці:</label>
+        <select name="itemsPerPage">
+            {% for option in [5, 10, 20, 50] %}
+                <option value="{{ option }}" {% if itemsPerPage == option %}selected{% endif %}>{{ option }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <button type="submit">Фільтрувати</button>
+</form>
+
+    <table border="1">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Client ID</th>
+            <th>Client Name</th>
+            <th>Driver ID</th>
+            <th>Driver Name</th>
+            <th>Route ID</th>
+            <th>Status</th>
+            <th>Created At</th>
+            <th>Дії</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for order in rideOrder %}
+    <tr>
+        <td>{{ order.id }}</td>
+        <td>{{ order.client.id }}</td>
+        <td>{{ order.client.name }}</td>
+        <td>{{ order.driver.id }}</td>
+        <td>{{ order.driver.name }}</td>
+        <td>{{ order.route.startLocation }} → {{ order.route.endLocation }}</td>
+        <td>{{ order.status }}</td>
+        <td>{{ order.createdAt ? order.createdAt|date('Y-m-d H:i:s') : '' }}</td>
+        <td>
+                    <a href="{{ path('app_ride_order_show', {'id': order.id}) }}">show</a>
+                    <a href="{{ path('app_ride_order_edit', {'id': order.id}) }}">edit</a>
+        </td>
+    </tr>
+    {% else %}
+        <tr><td colspan="6">No records found.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
 
     <a href="{{ path('app_ride_order_new') }}">Create new</a>
+
+    <div class="pagination">
+    {% if currentPage > 1 %}
+        <a href="?page={{ currentPage - 1 }}">«</a>
+    {% endif %}
+
+    {% for page in 1..totalPages %}
+        {% if page == currentPage %}
+            <span class="current">{{ page }}</span>
+        {% else %}
+            <a href="?page={{ page }}">{{ page }}</a>
+        {% endif %}
+    {% endfor %}
+
+    {% if currentPage < totalPages %}
+        <a href="?page={{ currentPage + 1 }}">»</a>
+    {% endif %}
+</div>
 {% endblock %}

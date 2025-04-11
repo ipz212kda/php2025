@@ -5,7 +5,35 @@
 {% block body %}
     <h1>Driver index</h1>
 
-    <table class="table">
+    <form method="get">
+    <div>
+        <label>Ім’я:</label>
+        <input type="text" name="name" value="{{ app.request.get('name') }}">
+    </div>
+    <div>
+        <label>Модель машини:</label>
+        <input type="text" name="car_model" value="{{ app.request.get('car_model') }}">
+    </div>
+    <div>
+        <label>Телефон:</label>
+        <input type="text" name="phone" value="{{ app.request.get('phone') }}">
+    </div>
+    <div>
+        <label>Ліцензія:</label>
+        <input type="text" name="license_plate" value="{{ app.request.get('license_plate') }}">
+    </div>
+    <div>
+        <label>На сторінці:</label>
+        <select name="itemsPerPage">
+            {% for option in [5, 10, 20, 50] %}
+                <option value="{{ option }}" {% if itemsPerPage == option %}selected{% endif %}>{{ option }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <button type="submit">Застосувати фільтри</button>
+    </form>
+
+    <table border="1" cellspacing="0" cellpadding="5">
         <thead>
             <tr>
                 <th>Id</th>
@@ -38,4 +66,22 @@
     </table>
 
     <a href="{{ path('app_driver_new') }}">Create new</a>
+
+    <div class="pagination">
+    {% if currentPage > 1 %}
+        <a href="?page={{ currentPage - 1 }}&itemsPerPage={{ itemsPerPage }}{% if app.request.query.get('name') %}&name={{ app.request.query.get('name') }}{% endif %}{% if app.request.query.get('phone') %}&phone={{ app.request.query.get('phone') }}{% endif %}{% if app.request.query.get('license_plate') %}&license_plate={{ app.request.query.get('license_plate') }}{% endif %}">« Попередня</a>
+    {% endif %}
+
+    {% for page in 1..totalPages %}
+        {% if page == currentPage %}
+            <span class="current">{{ page }}</span>
+        {% else %}
+            <a href="?page={{ page }}&itemsPerPage={{ itemsPerPage }}{% if app.request.query.get('name') %}&name={{ app.request.query.get('name') }}{% endif %}{% if app.request.query.get('phone') %}&phone={{ app.request.query.get('phone') }}{% endif %}{% if app.request.query.get('license_plate') %}&license_plate={{ app.request.query.get('license_plate') }}{% endif %}">{{ page }}</a>
+        {% endif %}
+    {% endfor %}
+
+    {% if currentPage < totalPages %}
+        <a href="?page={{ currentPage + 1 }}&itemsPerPage={{ itemsPerPage }}{% if app.request.query.get('name') %}&name={{ app.request.query.get('name') }}{% endif %}{% if app.request.query.get('phone') %}&phone={{ app.request.query.get('phone') }}{% endif %}{% if app.request.query.get('license_plate') %}&license_plate={{ app.request.query.get('license_plate') }}{% endif %}">Наступна »</a>
+    {% endif %}
+</div>
 {% endblock %}

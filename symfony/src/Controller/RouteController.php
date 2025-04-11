@@ -15,12 +15,46 @@ use Symfony\Component\Routing\Attribute\Route as RouteAttribute;
 final class RouteController extends AbstractController
 {
     #[RouteAttribute(name: 'app_route_index', methods: ['GET'])]
-    public function index(RouteRepository $routeRepository): Response
-    {
-        return $this->render('route/index.html.twig', [
-            'routes' => $routeRepository->findAll(),
-        ]);
+    public function index(Request $request, RouteRepository $routeRepository): Response
+{
+    $page = max(1, (int) $request->query->get('page', 1));
+    $itemsPerPage = max(1, (int) $request->query->get('itemsPerPage', 10));
+    $offset = ($page - 1) * $itemsPerPage;
+
+    $start = $request->query->get('start_location');
+    $end = $request->query->get('end_location');
+    $distance = $request->query->get('distance_km');
+
+    $qb = $routeRepository->createQueryBuilder('r');
+
+    if ($start) {
+        $qb->andWhere('r.start_location LIKE :start')->setParameter('start', "%$start%");
     }
+    if ($end) {
+        $qb->andWhere('r.end_location LIKE :end')->setParameter('end', "%$end%");
+    }
+    if ($distance !== null && is_numeric($distance)) {
+        $qb->andWhere('r.distance_km <= :distance')->setParameter('distance', $distance);
+    }
+
+    $countQb = clone $qb;
+    $countQb->select('COUNT(r.id)');
+    $totalItems = (int) $countQb->getQuery()->getSingleScalarResult();
+
+    $qb->setFirstResult($offset)
+       ->setMaxResults($itemsPerPage);
+
+    $routes = $qb->getQuery()->getResult();
+    $totalPages = (int) ceil($totalItems / $itemsPerPage);
+
+    return $this->render('route/index.html.twig', [
+        'routes' => $routes,
+        'currentPage' => $page,
+        'itemsPerPage' => $itemsPerPage,
+        'totalItems' => $totalItems,
+        'totalPages' => $totalPages,
+    ]);
+}
 
     #[RouteAttribute('/new', name: 'app_route_new', methods: ['GET', 'POST'])]
     public function new(Request $request, EntityManagerInterface $entityManager): Response

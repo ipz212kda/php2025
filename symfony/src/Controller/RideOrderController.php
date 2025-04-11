@@ -15,11 +15,53 @@ use Symfony\Component\Routing\Attribute\Route;
 final class RideOrderController extends AbstractController
 {
     #[Route(name: 'app_ride_order_index', methods: ['GET'])]
-    public function index(RideOrderRepository $rideOrderRepository): Response
-    {
-        return $this->render('ride_order/index.html.twig', [
-            'ride_orders' => $rideOrderRepository->findAll(),
-        ]);
+    public function index(Request $request, RideOrderRepository $rideOrderRepository): Response
+{
+    $page = max(1, (int) $request->query->get('page', 1));
+    $itemsPerPage = max(1, (int) $request->query->get('itemsPerPage', 10));
+    $offset = ($page - 1) * $itemsPerPage;
+
+    $clientId = $request->query->get('client_id');
+    $driverId = $request->query->get('driver_id');
+    $routeId = $request->query->get('route_id');
+    $status = $request->query->get('status');
+    $createdAt = $request->query->get('created_at');
+
+    $qb = $rideOrderRepository->createQueryBuilder('r');
+
+    if ($clientId) {
+        $qb->andWhere('r.client = :clientId')->setParameter('clientId', $clientId);
+    }
+    if ($driverId) {
+        $qb->andWhere('r.driver = :driverId')->setParameter('driverId', $driverId);
+    }
+    if ($routeId) {
+        $qb->andWhere('r.route = :routeId')->setParameter('routeId', $routeId);
+    }
+    if ($status) {
+        $qb->andWhere('r.status LIKE :status')->setParameter('status', "%$status%");
+    }
+    if ($createdAt) {
+        $qb->andWhere('DATE(r.created_at) = :createdAt')->setParameter('createdAt', new \DateTime($createdAt));
+    }
+
+    $countQb = clone $qb;
+    $countQb->select('COUNT(r.id)');
+    $totalItems = (int) $countQb->getQuery()->getSingleScalarResult();
+
+    $qb->setFirstResult($offset)
+       ->setMaxResults($itemsPerPage);
+
+    $rideOrder = $qb->getQuery()->getResult();
+    $totalPages = ceil($totalItems / $itemsPerPage);
+
+    return $this->render('ride_order/index.html.twig', [
+        'rideOrder' => $rideOrder,
+        'currentPage' => $page,
+        'itemsPerPage' => $itemsPerPage,
+        'totalItems' => $totalItems,
+        'totalPages' => $totalPages,
+    ]);
     }
 
     #[Route('/new', name: 'app_ride_order_new', methods: ['GET', 'POST'])]

@@ -15,12 +15,50 @@ use Symfony\Component\Routing\Attribute\Route;
 final class DriverController extends AbstractController
 {
     #[Route(name: 'app_driver_index', methods: ['GET'])]
-    public function index(DriverRepository $driverRepository): Response
-    {
-        return $this->render('driver/index.html.twig', [
-            'drivers' => $driverRepository->findAll(),
-        ]);
+    public function index(Request $request, DriverRepository $driverRepository): Response
+{
+    $page = max(1, (int) $request->query->get('page', 1));
+    $itemsPerPage = max(1, (int) $request->query->get('itemsPerPage', 10));
+    $offset = ($page - 1) * $itemsPerPage;
+
+    $name = $request->query->get('name');
+    $phone = $request->query->get('phone');
+    $licensePlate = $request->query->get('license_plate');
+    $carModel = $request->query->get('car_model');
+
+    $qb = $driverRepository->createQueryBuilder('d');
+
+    if ($name) {
+        $qb->andWhere('d.name LIKE :name')->setParameter('name', "%$name%");
     }
+    if ($phone) {
+        $qb->andWhere('d.phone LIKE :phone')->setParameter('phone', "%$phone%");
+    }
+    if ($licensePlate) {
+        $qb->andWhere('d.license_plate LIKE :plate')->setParameter('plate', "%$licensePlate%");
+    }
+    if ($carModel) {
+        $qb->andWhere('d.car_model LIKE :car')->setParameter('car', "%$carModel%");
+    }
+
+    $countQb = clone $qb;
+    $countQb->select('COUNT(d.id)');
+    $totalItems = (int) $countQb->getQuery()->getSingleScalarResult();
+
+    $qb->setFirstResult($offset)
+       ->setMaxResults($itemsPerPage);
+
+    $drivers = $qb->getQuery()->getResult();
+    $totalPages = (int) ceil($totalItems / $itemsPerPage);
+
+    return $this->render('driver/index.html.twig', [
+        'drivers' => $drivers,
+        'currentPage' => $page,
+        'itemsPerPage' => $itemsPerPage,
+        'totalItems' => $totalItems,
+        'totalPages' => $totalPages,
+    ]);
+}
 
     #[Route('/new', name: 'app_driver_new', methods: ['GET', 'POST'])]
     public function new(Request $request, EntityManagerInterface $entityManager): Response

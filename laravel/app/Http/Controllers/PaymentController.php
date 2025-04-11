@@ -4,16 +4,43 @@ namespace App\Http\Controllers;
 
 use App\Models\Payment;
 use Illuminate\Http\Request;
+use App\Models\RideOrder;
 
 class PaymentController extends Controller
 {
-    public function index() {
-        $payments = Payment::all();
+    public function index(Request $request)
+    {
+        $query = Payment::query();
+
+        if ($request->filled('id')) {
+            $query->where('id', $request->id);
+        }
+
+        if ($request->filled('ride_order_id')) {
+            $query->where('ride_order_id', $request->ride_order_id);
+        }
+
+        if ($request->filled('amount')) {
+            $query->where('amount', $request->amount);
+        }
+
+        if ($request->filled('payment_method')) {
+            $query->where('payment_method', 'like', '%' . $request->payment_method . '%');
+        }
+
+        if ($request->filled('paid_at')) {
+            $query->whereDate('paid_at', $request->paid_at);
+        }
+
+        $itemsPerPage = $request->input('itemsPerPage', 10);
+        $payments = $query->paginate($itemsPerPage)->appends($request->all());
+
         return view('payments.index', compact('payments'));
     }
 
     public function create() {
-        return view('payments.create');
+        $rideOrders = RideOrder::all();
+        return view('payments.create', compact('rideOrders'));
     }
 
     public function store(Request $request) {
@@ -53,4 +80,5 @@ class PaymentController extends Controller
     public function destroy($id) {
         Payment::destroy($id);
         return redirect()->route('payments.index');
+    }
 }

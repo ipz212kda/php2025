@@ -7,8 +7,33 @@ use Illuminate\Http\Request;
 
 class DriverController extends Controller
 {
-    public function index() {
-        $drivers = Driver::all();
+    public function index(Request $request)
+    {
+        $query = Driver::query();
+
+        if ($request->filled('id')) {
+            $query->where('id', $request->id);
+        }
+
+        if ($request->filled('name')) {
+            $query->where('name', 'like', '%' . $request->name . '%');
+        }
+
+        if ($request->filled('car_model')) {
+            $query->where('car_model', 'like', '%' . $request->car_model . '%');
+        }
+
+        if ($request->filled('license_plate')) {
+            $query->where('license_plate', 'like', '%' . $request->license_plate . '%');
+        }
+
+        if ($request->filled('phone')) {
+            $query->where('phone', 'like', '%' . $request->phone . '%');
+        }
+
+        $itemsPerPage = $request->input('itemsPerPage', 10);
+        $drivers = $query->paginate($itemsPerPage)->appends($request->all());
+
         return view('drivers.index', compact('drivers'));
     }
 

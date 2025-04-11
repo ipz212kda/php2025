@@ -7,8 +7,29 @@ use Illuminate\Http\Request;
 
 class RouteController extends Controller
 {
-    public function index() {
-        $routes = Route::all();
+    public function index(Request $request)
+    {
+        $query = Route::query();
+
+        if ($request->filled('id')) {
+            $query->where('id', $request->id);
+        }
+
+        if ($request->filled('start_location')) {
+            $query->where('start_location', 'like', '%' . $request->start_location . '%');
+        }
+
+        if ($request->filled('end_location')) {
+            $query->where('end_location', 'like', '%' . $request->end_location . '%');
+        }
+
+        if ($request->filled('distance_km')) {
+            $query->where('distance_km', $request->distance_km);
+        }
+
+        $itemsPerPage = $request->input('itemsPerPage', 10);
+        $routes = $query->paginate($itemsPerPage)->appends($request->all());
+
         return view('routes.index', compact('routes'));
     }
 

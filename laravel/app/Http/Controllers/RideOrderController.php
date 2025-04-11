@@ -12,8 +12,33 @@ use App\Models\Payment;
 
 class RideOrderController extends Controller
 {
-    public function index() {
-        $rideOrders = RideOrder::with(['driver', 'client', 'route'])->get();
+    public function index(Request $request)
+    {
+        $query = RideOrder::query();
+
+        if ($request->filled('id')) {
+            $query->where('id', $request->id);
+        }
+
+        if ($request->filled('client_id')) {
+            $query->where('client_id', $request->client_id);
+        }
+
+        if ($request->filled('driver_id')) {
+            $query->where('driver_id', $request->driver_id);
+        }
+
+        if ($request->filled('route_id')) {
+            $query->where('route_id', $request->route_id);
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $itemsPerPage = $request->input('itemsPerPage', 10);
+        $rideOrders = $query->paginate($itemsPerPage)->appends($request->all());
+
         return view('ride-orders.index', compact('rideOrders'));
     }
 

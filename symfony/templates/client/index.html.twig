@@ -1,21 +1,45 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Client index{% endblock %}
+{% block title %}Edit Client{% endblock %}
 
 {% block body %}
-    <h1>Client index</h1>
+<h1>Клієнти</h1>
 
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Id</th>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Phone</th>
-                <th>actions</th>
-            </tr>
-        </thead>
-        <tbody>
+<form method="get">
+    <div>
+        <label>Ім’я:</label>
+        <input type="text" name="name" value="{{ app.request.get('name') }}">
+    </div>
+    <div>
+        <label>Email:</label>
+        <input type="text" name="email" value="{{ app.request.get('email') }}">
+    </div>
+    <div>
+        <label>Телефон:</label>
+        <input type="text" name="phone" value="{{ app.request.get('phone') }}">
+    </div>
+    <div>
+        <label>На сторінці:</label>
+        <select name="itemsPerPage">
+            {% for option in [5, 10, 20, 50] %}
+                <option value="{{ option }}" {% if itemsPerPage == option %}selected{% endif %}>{{ option }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <button type="submit">Застосувати фільтри</button>
+</form>
+
+<table border="1" cellspacing="0" cellpadding="5">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Ім’я</th>
+            <th>Email</th>
+            <th>Телефон</th>
+            <th>Дії</th>
+        </tr>
+    </thead>
+    <tbody>
         {% for client in clients %}
             <tr>
                 <td>{{ client.id }}</td>
@@ -29,11 +53,28 @@
             </tr>
         {% else %}
             <tr>
-                <td colspan="5">no records found</td>
+                <td colspan="3">Нічого не знайдено</td>
             </tr>
         {% endfor %}
-        </tbody>
-    </table>
+    </tbody>
+</table>
 
-    <a href="{{ path('app_client_new') }}">Create new</a>
+{# Пагінація #}
+<div class="pagination">
+    {% if currentPage > 1 %}
+        <a href="?page={{ currentPage - 1 }}&itemsPerPage={{ itemsPerPage }}{% if app.request.query.get('name') %}&name={{ app.request.query.get('name') }}{% endif %}{% if app.request.query.get('email') %}&email={{ app.request.query.get('email') }}{% endif %}{% if app.request.query.get('phone') %}&phone={{ app.request.query.get('phone') }}{% endif %}">&laquo; Попередня</a>
+    {% endif %}
+
+    {% for page in 1..totalPages %}
+        {% if page == currentPage %}
+            <span class="current">{{ page }}</span>
+        {% else %}
+            <a href="?page={{ page }}&itemsPerPage={{ itemsPerPage }}{% if app.request.query.get('name') %}&name={{ app.request.query.get('name') }}{% endif %}{% if app.request.query.get('email') %}&email={{ app.request.query.get('email') }}{% endif %}{% if app.request.query.get('phone') %}&phone={{ app.request.query.get('phone') }}{% endif %}">{{ page }}</a>
+        {% endif %}
+    {% endfor %}
+
+    {% if currentPage < totalPages %}
+        <a href="?page={{ currentPage + 1 }}&itemsPerPage={{ itemsPerPage }}{% if app.request.query.get('name') %}&name={{ app.request.query.get('name') }}{% endif %}{% if app.request.query.get('email') %}&email={{ app.request.query.get('email') }}{% endif %}{% if app.request.query.get('phone') %}&phone={{ app.request.query.get('phone') }}{% endif %}">Наступна &raquo;</a>
+    {% endif %}
+</div>
 {% endblock %}

@@ -7,8 +7,29 @@ use Illuminate\Http\Request;
 
 class ClientController extends Controller
 {
-    public function index() {
-        $clients = Client::all();
+    public function index(Request $request)
+    {
+        $query = Client::query();
+
+        if ($request->filled('id')) {
+            $query->where('id', $request->id);
+        }
+
+        if ($request->filled('name')) {
+            $query->where('name', 'like', '%' . $request->name . '%');
+        }
+
+        if ($request->filled('email')) {
+            $query->where('email', 'like', '%' . $request->email . '%');
+        }
+
+        if ($request->filled('phone')) {
+            $query->where('phone', 'like', '%' . $request->phone . '%');
+        }
+
+        $itemsPerPage = $request->input('itemsPerPage', 10);
+        $clients = $query->paginate($itemsPerPage)->appends($request->all());
+
         return view('clients.index', compact('clients'));
     }
 
