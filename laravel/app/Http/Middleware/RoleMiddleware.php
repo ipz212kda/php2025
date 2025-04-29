@@ -1,0 +1,43 @@
+<?php
+
+namespace App\Http\Middleware;
+
+use Closure;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Support\Facades\Auth;
+
+class RoleMiddleware
+{
+    /**
+     * Handle an incoming request.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \Closure  $next
+     * @param  string  ...$roles
+     * @return mixed
+     */
+    public function handle(Request $request, Closure $next, ...$roles): mixed
+    {
+        if (!Auth::guard('api')->check()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Unauthorized'
+            ], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $user = Auth::guard('api')->user();
+        
+        foreach ($roles as $role) {
+
+            if ($user->role === $role) {
+                return $next($request);
+            }
+        }
+
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Access denied. You do not have the required role.'
+        ], Response::HTTP_FORBIDDEN);
+    }
+}

@@ -4,10 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Driver;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 
 class DriverController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
         $query = Driver::query();
 
@@ -32,16 +33,16 @@ class DriverController extends Controller
         }
 
         $itemsPerPage = $request->input('itemsPerPage', 10);
-        $drivers = $query->paginate($itemsPerPage)->appends($request->all());
+        $drivers = $query->paginate($itemsPerPage);
 
-        return view('drivers.index', compact('drivers'));
+        return response()->json([
+            'status' => 'success',
+            'data' => $drivers
+        ]);
     }
 
-    public function create() {
-        return view('drivers.create');
-    }
-
-    public function store(Request $request) {
+    public function store(Request $request): JsonResponse 
+    {
         $data = $request->validate([
             'name' => 'required',
             'car_model' => 'required',
@@ -49,27 +50,53 @@ class DriverController extends Controller
             'phone' => 'required'
         ]);
         
-        Driver::create($request->all());
-        return redirect()->route('drivers.index');
+        $driver = Driver::create($request->all());
+        
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Driver created successfully',
+            'data' => $driver
+        ], 201);
     }
     
-    public function edit($id) {
+    public function show($id): JsonResponse
+    {
         $driver = Driver::findOrFail($id);
-        return view('drivers.edit', compact('driver'));
+        
+        return response()->json([
+            'status' => 'success',
+            'data' => $driver
+        ]);
     }
 
-    public function show($id) {
-        return Driver::findOrFail($id);
-    }
-
-    public function update(Request $request, $id) {
+    public function update(Request $request, $id): JsonResponse
+    {
         $driver = Driver::findOrFail($id);
+        
+        $data = $request->validate([
+            'name' => 'required',
+            'car_model' => 'required',
+            'license_plate' => 'required',
+            'phone' => 'required'
+        ]);
+        
         $driver->update($request->all());
-        return redirect()->route('drivers.index');
+        
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Driver updated successfully',
+            'data' => $driver
+        ]);
     }
 
-    public function destroy($id) {
-        Driver::destroy($id);
-        return redirect()->route('drivers.index');
+    public function destroy($id): JsonResponse
+    {
+        $driver = Driver::findOrFail($id);
+        $driver->delete();
+        
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Driver deleted successfully'
+        ]);
     }
 }

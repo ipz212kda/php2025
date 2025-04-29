@@ -4,10 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Client;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 
 class ClientController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
         $query = Client::query();
 
@@ -28,42 +29,68 @@ class ClientController extends Controller
         }
 
         $itemsPerPage = $request->input('itemsPerPage', 10);
-        $clients = $query->paginate($itemsPerPage)->appends($request->all());
+        $clients = $query->paginate($itemsPerPage);
 
-        return view('clients.index', compact('clients'));
+        return response()->json([
+            'status' => 'success',
+            'data' => $clients
+        ]);
     }
 
-    public function create() {
-        return view('clients.create');
-    }
-
-    public function store(Request $request) {
+    public function store(Request $request): JsonResponse 
+    {
         $data = $request->validate([
             'name' => 'required',
             'email' => 'required|email|unique:clients',
             'phone' => 'required'
         ]);
-        Client::create($data);
-        return redirect()->route('clients.index');
+        
+        $client = Client::create($data);
+        
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Client created successfully',
+            'data' => $client
+        ], 201);
     }
-
-    public function edit($id) {
+    
+    public function show($id): JsonResponse
+    {
         $client = Client::findOrFail($id);
-        return view('clients.edit', compact('client'));
+        
+        return response()->json([
+            'status' => 'success',
+            'data' => $client
+        ]);
     }
 
-    public function show($id) {
-        return Client::findOrFail($id);
-    }
-
-    public function update(Request $request, $id) {
+    public function update(Request $request, $id): JsonResponse
+    {
         $client = Client::findOrFail($id);
-        $client->update($request->all());
-        return redirect()->route('clients.index');
+        
+        $data = $request->validate([
+            'name' => 'required',
+            'email' => 'required|email|unique:clients,email,' . $id,
+            'phone' => 'required'
+        ]);
+        
+        $client->update($data);
+        
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Client updated successfully',
+            'data' => $client
+        ]);
     }
 
-    public function destroy($id) {
-        Client::destroy($id);
-        return redirect()->route('clients.index');
+    public function destroy($id): JsonResponse
+    {
+        $client = Client::findOrFail($id);
+        $client->delete();
+        
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Client deleted successfully'
+        ]);
     }
 }

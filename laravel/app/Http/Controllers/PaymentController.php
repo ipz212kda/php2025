@@ -5,10 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Payment;
 use Illuminate\Http\Request;
 use App\Models\RideOrder;
+use Illuminate\Http\JsonResponse;
 
 class PaymentController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
         $query = Payment::query();
 
@@ -33,17 +34,16 @@ class PaymentController extends Controller
         }
 
         $itemsPerPage = $request->input('itemsPerPage', 10);
-        $payments = $query->paginate($itemsPerPage)->appends($request->all());
+        $payments = $query->paginate($itemsPerPage);
 
-        return view('payments.index', compact('payments'));
+        return response()->json([
+            'status' => 'success',
+            'data' => $payments
+        ]);
     }
 
-    public function create() {
-        $rideOrders = RideOrder::all();
-        return view('payments.create', compact('rideOrders'));
-    }
-
-    public function store(Request $request) {
+    public function store(Request $request): JsonResponse 
+    {
         $data = $request->validate([
             'ride_order_id' => 'required|exists:ride_orders,id',
             'amount' => 'required|numeric|min:0',
@@ -51,20 +51,26 @@ class PaymentController extends Controller
             'paid_at' => 'required|date',
         ]);
 
-        Payment::create($data);
-        return redirect()->route('payments.index'); 
+        $payment = Payment::create($data);
+        
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Payment created successfully',
+            'data' => $payment
+        ], 201);
     }
 
-    public function edit($id) {
-        $payment = Payment::findOrFail($id);
-        return view('payments.edit', compact('payment'));
+    public function show($id): JsonResponse
+    {
+        $payment = Payment::with('rideOrder')->findOrFail($id);
+        
+        return response()->json([
+            'status' => 'success',
+            'data' => $payment
+        ]);
     }
 
-    public function show($id) {
-        return Payment::with('rideOrder')->findOrFail($id);
-    }
-
-    public function update(Request $request, Payment $payment)
+    public function update(Request $request, Payment $payment): JsonResponse
     {
         $validated = $request->validate([
             'ride_order_id' => 'required|exists:ride_orders,id',
@@ -74,11 +80,22 @@ class PaymentController extends Controller
         ]);
 
         $payment->update($validated);
-        return redirect()->route('payments.index');
+        
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Payment updated successfully',
+            'data' => $payment
+        ]);
     }
 
-    public function destroy($id) {
-        Payment::destroy($id);
-        return redirect()->route('payments.index');
+    public function destroy($id): JsonResponse
+    {
+        $payment = Payment::findOrFail($id);
+        $payment->delete();
+        
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Payment deleted successfully'
+        ]);
     }
 }

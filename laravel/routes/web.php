@@ -14,7 +14,6 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/test', [TestController::class, 'test']);
 Route::resource('products', ProductController::class);
 
 // Водії

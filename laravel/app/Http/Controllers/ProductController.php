@@ -4,55 +4,69 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 
 class ProductController extends Controller
 {
-    public function index()
+    public function index(): JsonResponse
     {
         $products = Product::all();
-        return view('products.index', compact('products'));
+        
+        return response()->json([
+            'status' => 'success',
+            'data' => $products
+        ]);
     }
 
-    public function create()
+    public function store(Request $request): JsonResponse
     {
-        return view('products.create');
-    }
-
-    public function store(Request $request)
-    {
-        Product::create($request->validate([
+        $data = $request->validate([
             'name' => 'required',
             'category' => 'nullable',
             'price' => 'required|numeric',
-        ]));
-
-        return redirect()->route('products.index')->with('success', 'Товар створено');
+        ]);
+        
+        $product = Product::create($data);
+        
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Product created successfully',
+            'data' => $product
+        ], 201);
     }
 
-    public function show(Product $product)
+    public function show(Product $product): JsonResponse
     {
-        return view('products.show', compact('product'));
+        return response()->json([
+            'status' => 'success',
+            'data' => $product
+        ]);
     }
 
-    public function edit(Product $product)
+    public function update(Request $request, Product $product): JsonResponse
     {
-        return view('products.edit', compact('product'));
-    }
-
-    public function update(Request $request, Product $product)
-    {
-        $product->update($request->validate([
+        $data = $request->validate([
             'name' => 'required',
             'category' => 'nullable',
             'price' => 'required|numeric',
-        ]));
-
-        return redirect()->route('products.index')->with('success', 'Товар оновлено');
+        ]);
+        
+        $product->update($data);
+        
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Product updated successfully',
+            'data' => $product
+        ]);
     }
 
-    public function destroy(Product $product)
+    public function destroy(Product $product): JsonResponse
     {
         $product->delete();
-        return redirect()->route('products.index')->with('success', 'Товар видалено');
+        
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Product deleted successfully'
+        ]);
     }
 }

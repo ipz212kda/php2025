@@ -4,10 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Route;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 
 class RouteController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
         $query = Route::query();
 
@@ -28,36 +29,43 @@ class RouteController extends Controller
         }
 
         $itemsPerPage = $request->input('itemsPerPage', 10);
-        $routes = $query->paginate($itemsPerPage)->appends($request->all());
+        $routes = $query->paginate($itemsPerPage);
 
-        return view('routes.index', compact('routes'));
+        return response()->json([
+            'status' => 'success',
+            'data' => $routes
+        ]);
     }
 
-    public function create() {
-        return view('routes.create');
-    }
-
-    public function store(Request $request) {
+    public function store(Request $request): JsonResponse 
+    {
         $data = $request->validate([
             'start_location' => 'required',
             'end_location' => 'required',
             'distance_km' => 'required|numeric'
         ]);
 
-        Route::create($data);
-        return redirect()->route('routes.index');
+        $route = Route::create($data);
+        
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Route created successfully',
+            'data' => $route
+        ], 201);
     }
-
-    public function edit($id) {
+    
+    public function show($id): JsonResponse
+    {
         $route = Route::findOrFail($id);
-        return view('routes.edit', compact('route'));
+        
+        return response()->json([
+            'status' => 'success',
+            'data' => $route
+        ]);
     }
 
-    public function show($id) {
-        return Route::findOrFail($id);
-    }
-
-    public function update(Request $request, $id) {
+    public function update(Request $request, $id): JsonResponse
+    {
         $data = $request->validate([
             'start_location' => 'required',
             'end_location' => 'required',
@@ -66,11 +74,22 @@ class RouteController extends Controller
 
         $route = Route::findOrFail($id);
         $route->update($data);
-        return redirect()->route('routes.index');
+        
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Route updated successfully',
+            'data' => $route
+        ]);
     }
 
-    public function destroy($id) {
-        Route::destroy($id);
-        return redirect()->route('routes.index');  
+    public function destroy($id): JsonResponse
+    {
+        $route = Route::findOrFail($id);
+        $route->delete();
+        
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Route deleted successfully'
+        ]);
     }
 }

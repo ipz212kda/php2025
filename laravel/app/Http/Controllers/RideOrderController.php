@@ -8,11 +8,11 @@ use App\Models\Driver;
 use App\Models\Client;
 use App\Models\Route;
 use App\Models\Payment;
-
+use Illuminate\Http\JsonResponse;
 
 class RideOrderController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
         $query = RideOrder::query();
 
@@ -37,20 +37,16 @@ class RideOrderController extends Controller
         }
 
         $itemsPerPage = $request->input('itemsPerPage', 10);
-        $rideOrders = $query->paginate($itemsPerPage)->appends($request->all());
+        $rideOrders = $query->paginate($itemsPerPage);
 
-        return view('ride-orders.index', compact('rideOrders'));
+        return response()->json([
+            'status' => 'success',
+            'data' => $rideOrders
+        ]);
     }
 
-    public function create() {
-        $drivers = Driver::all();
-        $clients = Client::all();
-        $routes = Route::all(); 
-
-        return view('ride-orders.create', compact('drivers', 'clients', 'routes'));
-    }
-
-    public function store(Request $request) {
+    public function store(Request $request): JsonResponse 
+    {
         $data = $request->validate([
             'client_id' => 'required|exists:clients,id',
             'driver_id' => 'required|exists:drivers,id',
@@ -58,24 +54,27 @@ class RideOrderController extends Controller
             'status' => 'required|in:new,in_progress,completed'
         ]);
 
-        RideOrder::create($data);
-        return redirect()->route('ride-orders.index');
+        $rideOrder = RideOrder::create($data);
+        
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Ride order created successfully',
+            'data' => $rideOrder
+        ], 201);
     }
 
-    public function show($id) {
-        return RideOrder::with(['client', 'driver', 'route', 'payment'])->findOrFail($id);
+    public function show($id): JsonResponse
+    {
+        $rideOrder = RideOrder::with(['client', 'driver', 'route', 'payment'])->findOrFail($id);
+        
+        return response()->json([
+            'status' => 'success',
+            'data' => $rideOrder
+        ]);
     }
 
-    public function edit($id) {
-        $rideOrder = RideOrder::findOrFail($id);
-        $drivers = Driver::all();
-        $clients = Client::all();
-        $routes = Route::all();
-
-        return view('ride-orders.edit', compact('rideOrder', 'drivers', 'clients', 'routes'));
-    }
-
-    public function update(Request $request, $id) {
+    public function update(Request $request, $id): JsonResponse
+    {
         $validated = $request->validate([
             'client_id' => 'required|exists:clients,id',
             'driver_id' => 'required|exists:drivers,id',
@@ -85,11 +84,45 @@ class RideOrderController extends Controller
 
         $rideOrder = RideOrder::findOrFail($id);
         $rideOrder->update($validated);
-        return redirect()->route('ride-orders.index');
+        
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Ride order updated successfully',
+            'data' => $rideOrder
+        ]);
     }
 
-    public function destroy($id) {
-        RideOrder::destroy($id);
-        return redirect()->route('ride-orders.index');
+    public function destroy($id): JsonResponse
+    {
+        $rideOrder = RideOrder::findOrFail($id);
+        $rideOrder->delete();
+        
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Ride order deleted successfully'
+        ]);
+    }
+
+    /**
+     * Update the status of a ride order (Manager and Admin only).
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Models\RideOrder  $rideOrder
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function updateStatus(Request $request, RideOrder $rideOrder)
+    {
+        $request->validate([
+            'status' => 'required|string|in:pending,confirmed,in_progress,completed,cancelled',
+        ]);
+
+        $rideOrder->status = $request->status;
+        $rideOrder->save();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Ride order status updated successfully',
+            'data' => $rideOrder
+        ]);
     }
 }
