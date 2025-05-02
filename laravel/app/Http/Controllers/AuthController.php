@@ -42,7 +42,7 @@ class AuthController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'role' => $request->input('role', 'client'), // Fixed: use input method with default
+            'role' => $request->input('role', 'client'),
         ]);
 
         $token = JWTAuth::fromUser($user);
